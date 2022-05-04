@@ -1,0 +1,6 @@
+Install Visual Studio Code (VSC)
+
+Install plugin Yaml by Red Hat
+
+Install plugin Kubernetes 
+(when you start to write for example pod.yaml you can select directly in VSC the corresponding element to have everything compiled)
