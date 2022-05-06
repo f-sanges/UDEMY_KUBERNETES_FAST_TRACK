@@ -1,0 +1,118 @@
+After the setup, start minikube:
+minikube start
+
+# create
+[docker@centos7 UDEMY_KUBERNETES_FAST_TRACK]$ kubectl create -f pod.yaml
+pod/nginx created
+
+
+# get pods
+[docker@centos7 UDEMY_KUBERNETES_FAST_TRACK]$ kubectl get pods
+NAME    READY   STATUS    RESTARTS   AGE
+nginx   1/1     Running   0          47s
+
+
+# modify the pod.yaml adding "type: proxy"
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  labels:
+    name: myPod
+    # added type
+    type: proxy
+spec:
+  containers:
+  - name: nginxcontainer
+    image: nginx:latest
+    resources:
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+    ports:
+      - containerPort: 80
+
+# apply 
+kubectl apply -f pod.yaml
+Warning: resource pods/nginx is missing the kubectl.kubernetes.io/last-applied-configuration annotation which is required by kubectl apply. kubectl apply should only be used on resources created declaratively by either kubectl create --save-config or kubectl apply. The missing annotation will be patched automatically.
+pod/nginx configured
+
+
+# delete pod
+kubectl delete pod nginx
+
+
+
+
+# Replicaset
+kubectl create -f replicaset.yaml
+replicaset.apps/myreplicaset created
+
+
+# get replicaset
+[docker@centos7 UDEMY_KUBERNETES_FAST_TRACK]$ kubectl get replicaset
+NAME           DESIRED   CURRENT   READY   AGE
+myreplicaset   3         3         2       72s
+
+# get pods
+[docker@centos7 UDEMY_KUBERNETES_FAST_TRACK]$ kubectl get pods
+NAME                 READY   STATUS    RESTARTS   AGE
+myreplicaset-chz8c   1/1     Running   0          78s
+myreplicaset-fl5rj   1/1     Running   0          78s
+myreplicaset-n6plf   0/1     Pending   0          78s
+
+
+# kubectl with watch command
+watch kubectl get pods
+
+
+# kubectl delete pod 
+[docker@centos7 UDEMY_KUBERNETES_FAST_TRACK]$ kubectl delete pod myreplicaset-n6plf
+pod "myreplicaset-n6plf" deleted
+[docker@centos7 UDEMY_KUBERNETES_FAST_TRACK]$ kubectl get pods
+NAME                 READY   STATUS    RESTARTS   AGE
+myreplicaset-chz8c   1/1     Running   0          5m23s
+myreplicaset-fl5rj   1/1     Running   0          5m23s
+myreplicaset-p5wxn   0/1     Pending   0          6s
+
+
+
+# kubectl delete replicaset
+[docker@centos7 UDEMY_KUBERNETES_FAST_TRACK]$ kubectl delete replicaset myreplicaset
+replicaset.apps "myreplicaset" deleted
+[docker@centos7 UDEMY_KUBERNETES_FAST_TRACK]$ kubectl get pods
+No resources found in default namespace.
+
+
+
+# Deployment
+[docker@centos7 UDEMY_KUBERNETES_FAST_TRACK]$ kubectl create -f deployment.yaml
+deployment.apps/mydeployment created
+
+# get pods
+[docker@centos7 UDEMY_KUBERNETES_FAST_TRACK]$ kubectl get pods
+NAME                           READY   STATUS    RESTARTS   AGE
+mydeployment-85bcdb949-9lvf6   0/1     Pending   0          18s
+mydeployment-85bcdb949-q9j4j   1/1     Running   0          18s
+mydeployment-85bcdb949-sr99r   1/1     Running   0          18s
+mydeployment-85bcdb949-v6s58   0/1     Pending   0          18s
+mydeployment-85bcdb949-xqfpx   0/1     Pending   0          18s
+
+# get deployments or get deploy
+[docker@centos7 UDEMY_KUBERNETES_FAST_TRACK]$ kubectl get deployments
+NAME           READY   UP-TO-DATE   AVAILABLE   AGE
+mydeployment   2/5     5            2           40s
+
+# get replicaset or get rs
+[docker@centos7 UDEMY_KUBERNETES_FAST_TRACK]$ kubectl get replicasets
+NAME                     DESIRED   CURRENT   READY   AGE
+mydeployment-85bcdb949   5         5         2       89s
+
+
+# kubectl delete deployments or deploy
+[docker@centos7 UDEMY_KUBERNETES_FAST_TRACK]$ kubectl delete deployments mydeployment
+deployment.apps "mydeployment" deleted
+
+
+
