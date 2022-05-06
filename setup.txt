@@ -4,3 +4,224 @@ Install plugin Yaml by Red Hat
 
 Install plugin Kubernetes 
 (when you start to write for example pod.yaml you can select directly in VSC the corresponding element to have everything compiled)
+
+
+###############################
+Command docker info:
+docker info
+
+
+###############################
+Clean the minikube
+minikube delete
+
+###############################
+What I installed
+minikube:
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+
+sudo yum install -y kubelet kubeadm kubectl
+
+#To install kubectl
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+
+
+
+###############################
+Command to check kubelet status
+systemctl status -l kubelet
+
+journalctl -u service-name.service
+journalctl -u kubelet
+
+In my case on CentOS
+ Error: failed to load kubelet config file, error: failed to load Kubelet config file /var/lib/kubelet/config.yaml, 
+
+
+
+###############################
+sudo kubeadm init
+ [docker@centos7 KUBERNETES]$ sudo kubeadm init
+[init] Using Kubernetes version: v1.24.0
+[preflight] Running pre-flight checks
+        [WARNING Hostname]: hostname "centos7" could not be reached
+        [WARNING Hostname]: hostname "centos7": lookup centos7 on 8.8.8.8:53: no such host
+error execution phase preflight: [preflight] Some fatal errors occurred:
+        [ERROR CRI]: container runtime is not running: output: time="2022-05-06T11:00:34+02:00" level=fatal msg="connect: connect endpoint 'unix:///var/run/containerd/containerd.sock', make sure you are running as root and the endpoint has been started: context deadline exceeded"
+, error: exit status 1
+        [ERROR FileContent--proc-sys-net-bridge-bridge-nf-call-iptables]: /proc/sys/net/bridge/bridge-nf-call-iptables does not exist
+[preflight] If you know what you are doing, you can make a check non-fatal with `--ignore-preflight-errors=...`
+To see the stack trace of this error execute with --v=5 or higher
+
+# Start Docker
+sudo systectl start docker
+
+[docker@centos7 KUBERNETES]$ sudo kubeadm init
+[init] Using Kubernetes version: v1.24.0
+[preflight] Running pre-flight checks
+        [WARNING Hostname]: hostname "centos7" could not be reached
+        [WARNING Hostname]: hostname "centos7": lookup centos7 on 8.8.8.8:53: no such host
+error execution phase preflight: [preflight] Some fatal errors occurred:
+        [ERROR CRI]: container runtime is not running: output: time="2022-05-06T11:02:23+02:00" level=fatal msg="getting status of runtime: rpc error: code = Unimplemented desc = unknown service runtime.v1alpha2.RuntimeService"
+, error: exit status 1
+[preflight] If you know what you are doing, you can make a check non-fatal with `--ignore-preflight-errors=...`
+To see the stack trace of this error execute with --v=5 or higher
+
+# Added my hostname in /etc/hosts
+[docker@centos7 etc]$ sudo kubeadm init
+[init] Using Kubernetes version: v1.24.0
+[preflight] Running pre-flight checks
+error execution phase preflight: [preflight] Some fatal errors occurred:
+        [ERROR CRI]: container runtime is not running: output: time="2022-05-06T11:14:31+02:00" level=fatal msg="getting status of runtime: rpc error: code = Unimplemented desc = unknown service runtime.v1alpha2.RuntimeService"
+, error: exit status 1
+[preflight] If you know what you are doing, you can make a check non-fatal with `--ignore-preflight-errors=...`
+To see the stack trace of this error execute with --v=5 or higher
+
+
+
+# Note from https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+Note: Docker Engine does not implement the CRI which is a requirement for a container runtime to work with Kubernetes. For that reason, an additional service cri-dockerd has to be installed. cri-dockerd is a project based on the legacy built-in Docker Engine support that was removed from the kubelet in version 1.24.
+
+
+Install cri-dockerd
+https://github.com/Mirantis/cri-dockerd
+download the package, unzip it
+go to the directory of the package
+mkdir bin
+cd src && go get && go build -o ../bin/cri-dockerd
+To install, on a Linux system that uses systemd, and already has Docker Engine installed
+
+# Run these commands as root
+mkdir -p /usr/local/bin
+install -o root -g root -m 0755 bin/cri-dockerd /usr/local/bin/cri-dockerd
+cp -a packaging/systemd/* /etc/systemd/system
+sed -i -e 's,/usr/bin/cri-dockerd,/usr/local/bin/cri-dockerd,' /etc/systemd/system/cri-docker.service
+systemctl daemon-reload
+systemctl enable cri-docker.service
+systemctl enable --now cri-docker.socket
+
+sudo kubeadm init
+Found multiple CRI endpoints on the host. Please define which one do you wish to use by setting the 'criSocket' field in the kubeadm configuration file: unix:///var/run/containerd/containerd.sock, unix:///var/run/cri-dockerd.sock
+To see the stack trace of this error execute with --v=5 or higher
+
+# Specify the socket
+[docker@centos7 KUBERNETES]$ sudo kubeadm init --cri-socket unix:///var/run/cri-dockerd.sock
+[init] Using Kubernetes version: v1.24.0
+[preflight] Running pre-flight checks
+error execution phase preflight: [preflight] Some fatal errors occurred:
+        [ERROR CRI]: container runtime is not running: output: time="2022-05-06T12:15:47+02:00" level=fatal msg="connect: connect endpoint 'unix:///var/run/cri-dockerd.sock', make sure you are running as root and the endpoint has been started: context deadline exceeded"
+, error: exit status 1
+[preflight] If you know what you are doing, you can make a check non-fatal with `--ignore-preflight-errors=...`
+To see the stack trace of this error execute with --v=5 or higher
+
+
+# Check the status of cri runtime
+systemctl status cri-docker.service
+
+# changed the service in ExecStart adding "cri-dockerd" because the pointer was not correct
+vi /etc/systemd/system/cri-docker.service
+ExecStart=/usr/local/bin/cri-dockerd/cri-dockerd --container-runtime-endpoint fd:// --network-plugin=
+
+
+# kubeadm init da root
+kubeadm init --cri-socket unix:///var/run/cri-dockerd.sock
+and restart kubelet:
+systemctl restart kubelet
+
+[docker@centos7 cri-dockerd-master]$ sudo systemctl status kubelet.service
+● kubelet.service - kubelet: The Kubernetes Node Agent
+   Loaded: loaded (/usr/lib/systemd/system/kubelet.service; enabled; vendor preset: disabled)
+  Drop-In: /usr/lib/systemd/system/kubelet.service.d
+           └─10-kubeadm.conf
+   Active: active (running) since ven 2022-05-06 12:35:14 CEST; 1s ago
+     Docs: https://kubernetes.io/docs/
+ Main PID: 14702 (kubelet)
+    Tasks: 14
+   Memory: 36.9M
+   CGroup: /system.slice/kubelet.service
+           └─14702 /usr/bin/kubelet --bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubelet.conf --kubeconfig=/etc/kubernetes/kubelet.conf --config=/var/lib/ku...
+
+mag 06 12:35:15 centos7 kubelet[14702]: I0506 12:35:15.266102   14702 reconciler.go:270] "operationExecutor.VerifyControllerAttachedVolume started for volume \"...
+mag 06 12:35:15 centos7 kubelet[14702]: I0506 12:35:15.266121   14702 reconciler.go:270] "operationExecutor.VerifyControllerAttachedVolume started for volume \"...
+mag 06 12:35:15 centos7 kubelet[14702]: I0506 12:35:15.266139   14702 reconciler.go:270] "operationExecutor.VerifyControllerAttachedVolume started for volume \"...
+mag 06 12:35:15 centos7 kubelet[14702]: I0506 12:35:15.266155   14702 reconciler.go:270] "operationExecutor.VerifyControllerAttachedVolume started for volume \"...
+mag 06 12:35:15 centos7 kubelet[14702]: I0506 12:35:15.266170   14702 reconciler.go:270] "operationExecutor.VerifyControllerAttachedVolume started for volume \"...
+mag 06 12:35:15 centos7 kubelet[14702]: I0506 12:35:15.266186   14702 reconciler.go:270] "operationExecutor.VerifyControllerAttachedVolume started for volume \"...
+mag 06 12:35:15 centos7 kubelet[14702]: I0506 12:35:15.266201   14702 reconciler.go:270] "operationExecutor.VerifyControllerAttachedVolume started for volume \"...
+mag 06 12:35:15 centos7 kubelet[14702]: I0506 12:35:15.266217   14702 reconciler.go:270] "operationExecutor.VerifyControllerAttachedVolume started for volume \"...
+mag 06 12:35:15 centos7 kubelet[14702]: I0506 12:35:15.266248   14702 reconciler.go:270] "operationExecutor.VerifyControllerAttachedVolume started for volume \"...
+mag 06 12:35:15 centos7 kubelet[14702]: I0506 12:35:15.266271   14702 reconciler.go:270] "operationExecutor.VerifyControllerAttachedVolume started for volume \"...
+Hint: Some lines were ellipsized, use -l to show in full.
+
+
+
+
+
+
+###############################
+What I set because of the error on minikube start:
+[WARNING Swap]: running with swap on is not supported. Please disable swap
+sudo swapoff -a
+
+
+
+
+###############################
+kubeadm init
+
+
+
+
+
+For minikube I added to the docker.service:
+/usr/lib/systemd/system/docker.service
+adding the option "--exec-opt native.cgroupdriver=systemd"
+ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock --exec-opt native.cgroupdriver=systemd
+
+
+
+
+
+
+
+
+[wait-control-plane] Waiting for the kubelet to boot up the control plane as static Pods from directory "/etc/kubernetes/manifests". This can take up to 4m0s
+[kubelet-check] Initial timeout of 40s passed.
+
+        Unfortunately, an error has occurred:
+                timed out waiting for the condition
+
+        This error is likely caused by:
+                - The kubelet is not running
+                - The kubelet is unhealthy due to a misconfiguration of the node in some way (required cgroups disabled)
+
+        If you are on a systemd-powered system, you can try to troubleshoot the error with the following commands:
+                - 'systemctl status kubelet'
+                - 'journalctl -xeu kubelet'
+
+        Additionally, a control plane component may have crashed or exited when started by the container runtime.
+        To troubleshoot, list all containers using your preferred container runtimes CLI.
+
+        Here is one example how you may list all Kubernetes containers running in docker:
+                - 'docker ps -a | grep kube | grep -v pause'
+                Once you have found the failing container, you can inspect its logs with:
+                - 'docker logs CONTAINERID'
+
+
+stderr:
+        [WARNING IsDockerSystemdCheck]: detected "cgroupfs" as the Docker cgroup driver. The recommended driver is "systemd". Please follow the guide at https://kubernetes.io/docs/setup/cri/
+        [WARNING FileContent--proc-sys-net-bridge-bridge-nf-call-iptables]: /proc/sys/net/bridge/bridge-nf-call-iptables does not exist
+        [WARNING Swap]: running with swap on is not supported. Please disable swap
+        [WARNING SystemVerification]: this Docker version is not on the list of validated versions: 20.10.5. Latest validated version: 19.03
+        [WARNING SystemVerification]: failed to parse kernel config: unable to load kernel module: "configs", output: "modprobe: FATAL: Module configs not found in directory /lib/modules/3.10.0-1160.62.1.el7.x86_64\n", err: exit status 1
+        [WARNING Service-Kubelet]: kubelet service is not enabled, please run 'systemctl enable kubelet.service'
+W0505 16:18:28.564918    7356 certs.go:476] WARNING: could not validate bounds for certificate apiserver: the certificate has expired: NotBefore: 2021-04-27 21:54:58 +0000 UTC, NotAfter: 2022-04-28 21:54:58 +0000 UTC
+error execution phase wait-control-plane: couldn't initialize a Kubernetes cluster
+To see the stack trace of this error execute with --v=5 or higher
+
+
+
+
+
+
