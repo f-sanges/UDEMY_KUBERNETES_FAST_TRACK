@@ -1,0 +1,109 @@
+# get pods
+[docker@centos7 multi]$ kubectl get pods
+NAME                            READY   STATUS    RESTARTS   AGE
+mydeployment-8474db97ff-6rlcq   0/2     Pending   0          42s
+mydeployment-8474db97ff-w99xt   2/2     Running   0          42s
+
+
+
+# describe pods
+[docker@centos7 multi]$ kubectl describe pod mydeployment-8474db97ff-w99xt
+Name:         mydeployment-8474db97ff-w99xt
+Namespace:    default
+Priority:     0
+Node:         minikube/192.168.49.2
+Start Time:   Mon, 09 May 2022 11:22:34 +0200
+Labels:       pod-template-hash=8474db97ff
+              server=nginx
+Annotations:  <none>
+Status:       Running
+IP:           172.17.0.3
+IPs:
+  IP:           172.17.0.3
+Controlled By:  ReplicaSet/mydeployment-8474db97ff
+Containers:
+  nginxcontainer:
+    Container ID:   docker://4b9f8c6b1c1bc0b66f3d1cd05c636ac92987fdd078e7d099ed1916ea4bb31c98
+    Image:          nginx:latest
+    Image ID:       docker-pullable://nginx@sha256:859ab6768a6f26a79bc42b231664111317d095a4f04e4b6fe79ce37b3d199097
+    Port:           80/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Mon, 09 May 2022 11:22:36 +0200
+    Ready:          True
+    Restart Count:  0
+    Limits:
+      cpu:     500m
+      memory:  128Mi
+    Requests:
+      cpu:        500m
+      memory:     128Mi
+    Environment:  <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-pgt4d (ro)
+  server:
+    Container ID:  docker://5dc45225fc3d1beea31984831c85dd271faa0eccbc8357ca794e9050f18ba9f1
+    Image:         ubuntu:latest
+    Image ID:      docker-pullable://ubuntu@sha256:26c68657ccce2cb0a31b330cb0be2b5e108d467f641c62e13ab40cbec258c68d
+    Port:          <none>
+    Host Port:     <none>
+    Command:
+      /bin/bash
+      -c
+    Args:
+      sleep 300
+    State:          Running
+      Started:      Mon, 09 May 2022 11:22:38 +0200
+    Ready:          True
+    Restart Count:  0
+    Limits:
+      cpu:     500m
+      memory:  500Mi
+    Requests:
+      cpu:        500m
+      memory:     500Mi
+    Environment:  <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-pgt4d (ro)
+Conditions:
+  Type              Status
+  Initialized       True
+  Ready             True
+  ContainersReady   True
+  PodScheduled      True
+Volumes:
+  kube-api-access-pgt4d:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   Guaranteed
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  92s   default-scheduler  Successfully assigned default/mydeployment-8474db97ff-w99xt to minikube
+  Normal  Pulling    91s   kubelet            Pulling image "nginx:latest"
+  Normal  Pulled     90s   kubelet            Successfully pulled image "nginx:latest" in 1.325044305s
+  Normal  Created    90s   kubelet            Created container nginxcontainer
+  Normal  Started    90s   kubelet            Started container nginxcontainer
+  Normal  Pulling    90s   kubelet            Pulling image "ubuntu:latest"
+  Normal  Pulled     88s   kubelet            Successfully pulled image "ubuntu:latest" in 1.193584088s
+  Normal  Created    88s   kubelet            Created container server
+  Normal  Started    88s   kubelet            Started container server
+
+
+
+
+# exec
+kubectl exec -it mydeployment-8474db97ff-w99xt -c server -- /bin/bash
+root@mydeployment-8474db97ff-w99xt:/#
+
+"server" is the ubuntu container specified in deployment.yaml 
+"-c" to specify the container
+"-i" Pass stdin to the container
+"-t" Stdin is a TTY
+
