@@ -1,0 +1,42 @@
+# get pv and pvc
+[docker@centos7 storage]$ kubectl get pv
+NAME   CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM           STORAGECLASS   REASON   AGE
+pv01   2Gi        RWO            Retain           Bound    default/mypvc   admstor                 29s
+[docker@centos7 storage]$ kubectl get pvc
+NAME    STATUS   VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+mypvc   Bound    pv01     2Gi        RWO            admstor        31s
+
+# In case it hangs:
+kubectl patch pvc {PVC_NAME} -p '{"metadata":{"finalizers":null}}'
+
+
+
+# create, get and describe configmap
+
+[docker@centos7 storage]$ kubectl create configmap httpd-conf --from-file=httpd.conf
+configmap/httpd-conf created
+[docker@centos7 storage]$ kubectl get configmap
+NAME               DATA   AGE
+httpd-conf         1      5s
+kube-root-ca.crt   1      6d2h
+[docker@centos7 storage]$ kubectl get cm
+NAME               DATA   AGE
+httpd-conf         1      10s
+kube-root-ca.crt   1      6d2h
+[docker@centos7 storage]$ kubectl describe configmap httpd-conf
+Name:         httpd-conf
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+
+Data
+====
+httpd.conf:
+----
+#
+[...]
+
+
+
+# write the configmap to file in yaml
+kubectl get cm httpd-conf -o yaml > httpd-configmap.yaml

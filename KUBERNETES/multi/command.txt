@@ -107,3 +107,18 @@ root@mydeployment-8474db97ff-w99xt:/#
 "-i" Pass stdin to the container
 "-t" Stdin is a TTY
 
+
+
+# kubectl logs
+[docker@centos7 multi]$ kubectl get pods
+NAME                            READY   STATUS    RESTARTS   AGE
+mydeployment-8698c7b4f4-cpg7f   1/1     Running   0          14s
+mydeployment-8698c7b4f4-vjhkz   1/1     Running   0          14s
+
+[docker@centos7 multi]$ kubectl logs mydeployment-8698c7b4f4-cpg7f -c myinit
+Hello from Docker!
+
+
+# kubectl edit to modify on the fly
+kubectl edit deployment mydeployment
+

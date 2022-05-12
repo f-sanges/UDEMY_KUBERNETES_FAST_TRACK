@@ -1,0 +1,54 @@
+# minikube addons enable
+[docker@centos7 multi]$ minikube addons enable ingress
+  - Using image k8s.gcr.io/ingress-nginx/controller:v1.0.4
+  - Using image k8s.gcr.io/ingress-nginx/kube-webhook-certgen:v1.1.1
+  - Using image k8s.gcr.io/ingress-nginx/kube-webhook-certgen:v1.1.1
+* Verifying ingress addon...
+* The 'ingress' addon is enabled
+
+
+
+# kubectl get pods -n kube-system
+"-n" stands for namespace
+[docker@centos7 multi]$ kubectl get pods -n kube-system
+NAME                               READY   STATUS    RESTARTS        AGE
+coredns-78fcd69978-2qs5k           1/1     Running   2 (2d20h ago)   3d1h
+etcd-minikube                      1/1     Running   2 (2d20h ago)   3d1h
+kube-apiserver-minikube            1/1     Running   2 (2d20h ago)   3d1h
+kube-controller-manager-minikube   1/1     Running   2 (2d20h ago)   3d1h
+kube-proxy-jpbjh                   1/1     Running   2 (2d20h ago)   3d1h
+kube-scheduler-minikube            1/1     Running   2 (2d20h ago)   3d1h
+storage-provisioner                1/1     Running   5 (3h33m ago)   3d1h
+
+
+# get service
+[docker@centos7 service]$ kubectl get service
+NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+kubernetes   ClusterIP   10.96.0.1       <none>        443/TCP    3d2h
+websrvc      ClusterIP   10.97.202.224   <none>        8080/TCP   91s
+
+
+# get ingress
+[docker@centos7 service]$ kubectl get ingress
+NAME          CLASS   HOSTS          ADDRESS     PORTS   AGE
+web-ingress   nginx   mysite.local   localhost   80      2m24s
+
+
+# minikube ip
+[docker@centos7 ingress]$ minikube ip
+192.168.49.2
+Put in /etc/hosts
+192.168.49.2 mysite.local
+
+[docker@centos7 ingress]$ curl mysite.local
+<html><body><h1>It works!</h1></body></html>
+
+
+
+# delete ingress
+[docker@centos7 ingress]$ kubectl get ingress
+NAME          CLASS   HOSTS          ADDRESS     PORTS   AGE
+web-ingress   nginx   mysite.local   localhost   80      51m
+[docker@centos7 ingress]$ kubectl delete ingress web-ingress
+ingress.networking.k8s.io "web-ingress" deleted
+

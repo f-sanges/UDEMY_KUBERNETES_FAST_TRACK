@@ -1,0 +1,27 @@
+# get namespaces
+[docker@centos7 namespace]$ kubectl get namespaces
+NAME              STATUS   AGE
+default           Active   4d10h
+dev               Active   8m59s
+ingress-nginx     Active   32h
+kube-node-lease   Active   4d10h
+kube-public       Active   4d10h
+kube-system       Active   4d10h
+
+
+# get pods specifing namespaces
+[docker@centos7 namespace]$ kubectl get pods
+NAME     READY   STATUS    RESTARTS   AGE
+myapp1   1/1     Running   0          6m40s
+[docker@centos7 namespace]$ kubectl get pods -n dev
+NAME     READY   STATUS    RESTARTS   AGE
+myapp2   1/1     Running   0          9m17s
+
+
+# delete pods and namespaces
+[docker@centos7 namespace]$ kubectl delete pods myapp1
+pod "myapp1" deleted
+[docker@centos7 namespace]$ kubectl delete pod myapp2 -n dev
+pod "myapp2" deleted
+[docker@centos7 namespace]$ kubectl delete namespace dev
+namespace "dev" deleted
