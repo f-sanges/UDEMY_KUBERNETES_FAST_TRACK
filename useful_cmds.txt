@@ -1,0 +1,21 @@
+# kubectl top
+kubectl top pod <POD_NAME>
+
+using watch
+watch kubectl top pod <POD_NAME> 
+
+--containers
+
+# kubectl top node
+kubectl top node
+
+
+
+# minikube dashboard to start the dashboard
+minikube dashboard
+
+
+# get contexts
+[docker@centos7 storage]$ kubectl config get-contexts
+CURRENT   NAME       CLUSTER    AUTHINFO   NAMESPACE
+*         minikube   minikube   minikube   default
